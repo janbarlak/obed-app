@@ -7,18 +7,21 @@
 <body>
     <h1>🍽️ Obedová pauza</h1>
 
-    <label>
-        <input type="checkbox">
-        Idem na obed
-    </label>
+    <h2>Kto ide na obed</h2>
+    <div id="checkboxes"></div>
 
-    <h2>Kto ide dnes na obed</h2>
-
+    <h2>Dnes idú na obed</h2>
     <ul id="usersList"></ul>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+        import {
+            getFirestore,
+            collection,
+            getDocs,
+            doc,
+            updateDoc
+        } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDIgpNqTfom-cIQVmDTU351KxFfK-BiRdM",
@@ -33,19 +36,46 @@
         const db = getFirestore(app);
 
         const usersList = document.getElementById("usersList");
+        const checkboxes = document.getElementById("checkboxes");
 
-        const querySnapshot = await getDocs(collection(db, "users"));
+        async function loadUsers() {
+            usersList.innerHTML = "";
+            checkboxes.innerHTML = "";
 
-querySnapshot.forEach((doc) => {
-    const data = doc.data();
+            const querySnapshot = await getDocs(collection(db, "users"));
 
-    if (data.available === true) {
-        const li = document.createElement("li");
-        li.textContent = data.name;
+            querySnapshot.forEach((userDoc) => {
+                const data = userDoc.data();
 
-        usersList.appendChild(li);
-    }
-});
+                const label = document.createElement("label");
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = data.available;
+
+                checkbox.addEventListener("change", async () => {
+                    await updateDoc(doc(db, "users", userDoc.id), {
+                        available: checkbox.checked
+                    });
+
+                    loadUsers();
+                });
+
+                label.appendChild(checkbox);
+                label.append(" " + data.name);
+
+                checkboxes.appendChild(label);
+                checkboxes.appendChild(document.createElement("br"));
+
+                if (data.available) {
+                    const li = document.createElement("li");
+                    li.textContent = data.name;
+                    usersList.appendChild(li);
+                }
+            });
+        }
+
+        loadUsers();
     </script>
 </body>
 </html>

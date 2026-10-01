@@ -7,19 +7,43 @@
 <body>
     <h1>🍽️ Obedová pauza</h1>
 
-    <br>
-
     <label>
         <input type="checkbox">
         Idem na obed
     </label>
 
-    <br>
-
     <h2>Kto ide dnes na obed</h2>
 
-    <ul id="usersList">
-    </ul>
+    <ul id="usersList"></ul>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIgpNqTfom-cIQVmDTU351KxFfK-BiRdM",
+            authDomain: "obedna-pauza.firebaseapp.com",
+            projectId: "obedna-pauza",
+            storageBucket: "obedna-pauza.firebasestorage.app",
+            messagingSenderId: "344992044371",
+            appId: "1:344992044371:web:174bca2238030df816fda6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const usersList = document.getElementById("usersList");
+
+        const querySnapshot = await getDocs(collection(db, "users"));
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+
+            const li = document.createElement("li");
+            li.textContent = data.name;
+
+            usersList.appendChild(li);
+        });
+    </script>
 </body>
 </html>

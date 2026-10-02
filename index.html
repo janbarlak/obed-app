@@ -14,13 +14,14 @@
         }
 
         h1 {
-            font-size: 32px;
+            font-size: 36px;
             margin-bottom: 5px;
+            font-weight: normal;
         }
 
         .date {
             color: #888;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             font-size: 16px;
         }
 
@@ -41,24 +42,20 @@
             color: #999999;
         }
 
-        hr {
-            border: none;
-            border-top: 1px solid #ddd;
-            margin: 20px 0;
-            width: 80%;
-            margin-left: 0;
+        .separator {
+            height: 50px;
         }
     </style>
 </head>
 <body>
 
-    <h1>🍽️ ☕ 🚶 Obedová pauza</h1>
+    <h1>🍽️☕🚶</h1>
 
     <div id="today" class="date"></div>
 
     <div id="availableUsers"></div>
 
-    <hr>
+    <div class="separator"></div>
 
     <div id="unavailableUsers"></div>
 
@@ -119,19 +116,6 @@
             return `${lastName} ${firstName}`;
         }
 
-        function sortContainer(container) {
-            const items = Array.from(container.children);
-
-            items.sort((a, b) =>
-                surname(a.dataset.name).localeCompare(
-                    surname(b.dataset.name),
-                    "sk"
-                )
-            );
-
-            items.forEach(item => container.appendChild(item));
-        }
-
         async function toggleUser(user, element) {
 
             const newAvailable = !user.available;
@@ -141,22 +125,7 @@
                 date: today
             });
 
-            user.available = newAvailable;
-
-            if (newAvailable) {
-                element.classList.remove("unavailable");
-                element.classList.add("available");
-
-                availableUsers.appendChild(element);
-                sortContainer(availableUsers);
-
-            } else {
-                element.classList.remove("available");
-                element.classList.add("unavailable");
-
-                unavailableUsers.appendChild(element);
-                sortContainer(unavailableUsers);
-            }
+            loadUsers();
         }
 
         async function loadUsers() {
@@ -189,8 +158,6 @@
                     user.available === true;
 
                 const div = document.createElement("div");
-
-                div.dataset.name = user.name;
 
                 div.className =
                     "user " +

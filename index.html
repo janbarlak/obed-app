@@ -57,6 +57,7 @@
     <h1>🍽️☕🚶</h1>
 
     <div id="today" class="date"></div>
+    <button id="refreshButton">↻</button>
 
     <div id="availableUsers"></div>
 
@@ -223,14 +224,7 @@ function renderUsers(users) {
 loadUsers();
 
 
-document.addEventListener(
-    "visibilitychange",
-    () => {
-        if (!document.hidden) {
-            loadUsers();
-        }
-    }
-);
+
     </script>
 
 </body>

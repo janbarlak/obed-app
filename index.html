@@ -74,7 +74,7 @@
 </head>
 <body>
 
-    <h1>🍽️☕🚶</h1>
+    <h1 id="headerEmoji">🍽️☕🚶</h1>
 
     <div class="headerRow">
     <div id="today" class="date"></div>
@@ -112,6 +112,7 @@
 
         const availableUsers = document.getElementById("availableUsers");
         const unavailableUsers = document.getElementById("unavailableUsers");
+        let adminClicks = 0;
 
         const today = new Date().toLocaleDateString("sv-SE");
 
@@ -125,6 +126,32 @@
         document.getElementById("today").textContent =
             `${weekday}, ${datePart}`;
 
+        document
+    .getElementById("headerEmoji")
+    .addEventListener("click", () => {
+
+        adminClicks++;
+
+        if (adminClicks < 4) {
+            return;
+        }
+
+        adminClicks = 0;
+
+        const fullName = prompt(
+            "Zadaj meno a priezvisko"
+        );
+
+        if (!fullName) {
+            return;
+        }
+
+        alert(
+            "Pridávanie osoby spravíme v ďalšom kroku."
+        );
+
+    });
+        
         function surname(name) {
             const parts = name.trim().split(" ");
             return parts[parts.length - 1].toLowerCase();

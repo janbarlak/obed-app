@@ -130,7 +130,7 @@ import {
 
         document
     .getElementById("headerEmoji")
-    .addEventListener("click", () => {
+    .addEventListener("click", async () => {
 
         adminClicks++;
 
@@ -144,13 +144,22 @@ import {
             "Zadaj meno a priezvisko"
         );
 
-        if (!fullName) {
-            return;
-        }
+ if (!fullName) {
+    return;
+}
 
-        alert(
-            "Pridávanie osoby spravíme v ďalšom kroku."
-        );
+const userId = createUserId(fullName);
+
+await setDoc(
+    doc(db, "users", userId),
+    {
+        name: fullName,
+        available: false,
+        date: ""
+    }
+);
+
+await loadUsers();
 
     });
         

@@ -14,11 +14,12 @@
         }
 
         h1 {
+            font-size: 32px;
             margin-bottom: 5px;
         }
 
         .date {
-            color: #666;
+            color: #888;
             margin-bottom: 25px;
             font-size: 16px;
         }
@@ -44,6 +45,8 @@
             border: none;
             border-top: 1px solid #ddd;
             margin: 20px 0;
+            width: 80%;
+            margin-left: 0;
         }
     </style>
 </head>
@@ -87,13 +90,16 @@
 
         const today = new Date().toISOString().split("T")[0];
 
+        const now = new Date();
+
+        const weekday = now.toLocaleDateString("sk-SK", {
+            weekday: "long"
+        });
+
+        const datePart = now.toLocaleDateString("sk-SK");
+
         document.getElementById("today").textContent =
-            new Date().toLocaleDateString("sk-SK", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric"
-            });
+            `${weekday}, ${datePart}`;
 
         function surname(name) {
             const parts = name.trim().split(" ");

@@ -137,38 +137,21 @@
             );
         }
 
-        async function toggleUser(user, element) {
+async function toggleUser(user) {
 
-            const newAvailable = !user.available;
+    const activeToday =
+        user.available === true &&
+        user.date === today;
 
-            await updateDoc(
-                doc(db, "users", user.id),
-                {
-                    available: newAvailable,
-                    date: today
-                }
-            );
-
-            user.available = newAvailable;
-
-            if (newAvailable) {
-
-                element.classList.remove("unavailable");
-                element.classList.add("available");
-
-                availableUsers.appendChild(element);
-                sortContainer(availableUsers);
-
-            } else {
-
-                element.classList.remove("available");
-                element.classList.add("unavailable");
-
-                unavailableUsers.appendChild(element);
-                sortContainer(unavailableUsers);
-
-            }
+    await updateDoc(
+        doc(db, "users", user.id),
+        {
+            available: !activeToday,
+            date: today
         }
+    );
+}
+
 
 function renderUsers(users) {
 

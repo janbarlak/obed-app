@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Obedová pauza</title>
-    <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <style>
         body {
@@ -67,12 +68,13 @@
     <script type="module">
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
         import {
             getFirestore,
             collection,
-            getDocs,
             doc,
-            updateDoc
+            updateDoc,
+            onSnapshot
         } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -121,70 +123,25 @@
             return `${lastName} ${firstName}`;
         }
 
-        function sortContainer(container) {
+        async function toggleUser(user) {
 
-            const items = Array.from(container.children);
-
-            items.sort((a, b) =>
-                surname(a.dataset.name).localeCompare(
-                    surname(b.dataset.name),
-                    "sk"
-                )
-            );
-
-            items.forEach(item =>
-                container.appendChild(item)
-            );
-        }
-
-        async function toggleUser(user, element) {
-
-            const newAvailable = !user.available;
+            const activeToday =
+                user.available === true &&
+                user.date === today;
 
             await updateDoc(
                 doc(db, "users", user.id),
                 {
-                    available: newAvailable,
+                    available: !activeToday,
                     date: today
                 }
             );
-
-            user.available = newAvailable;
-
-            if (newAvailable) {
-
-                element.classList.remove("unavailable");
-                element.classList.add("available");
-
-                availableUsers.appendChild(element);
-                sortContainer(availableUsers);
-
-            } else {
-
-                element.classList.remove("available");
-                element.classList.add("unavailable");
-
-                unavailableUsers.appendChild(element);
-                sortContainer(unavailableUsers);
-
-            }
         }
 
-        async function loadUsers() {
+        function renderUsers(users) {
 
-            const users = [];
-
-            const querySnapshot =
-                await getDocs(collection(db, "users"));
-
-            querySnapshot.forEach((userDoc) => {
-
-                users.push({
-                    id: userDoc.id,
-                    ...userDoc.data()
-                });
-
-            });
+            availableUsers.innerHTML = "";
+            unavailableUsers.innerHTML = "";
 
             users.sort((a, b) =>
                 surname(a.name).localeCompare(
@@ -201,8 +158,6 @@
 
                 const div = document.createElement("div");
 
-                div.dataset.name = user.name;
-
                 div.className =
                     "user " +
                     (activeToday
@@ -212,29 +167,4 @@
                 div.textContent =
                     displayName(user.name);
 
-                const uiUser = {
-                    id: user.id,
-                    available: activeToday
-                };
-
-                div.addEventListener("click", () =>
-                    toggleUser(
-                        uiUser,
-                        div
-                    )
-                );
-
-                if (activeToday) {
-                    availableUsers.appendChild(div);
-                } else {
-                    unavailableUsers.appendChild(div);
-                }
-            });
-        }
-
-        loadUsers();
-
-    </script>
-
-</body>
-</html>
+                div.addEventListener

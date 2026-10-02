@@ -70,9 +70,9 @@
         import {
             getFirestore,
             collection,
-            getDocs,
             doc,
-            updateDoc
+            updateDoc,
+            onSnapshot
         } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -170,69 +170,63 @@
             }
         }
 
-        async function loadUsers() {
+function renderUsers(users) {
 
-            const users = [];
+    availableUsers.innerHTML = "";
+    unavailableUsers.innerHTML = "";
 
-            const querySnapshot =
-                await getDocs(collection(db, "users"));
+    users.sort((a, b) =>
+        surname(a.name).localeCompare(
+            surname(b.name),
+            "sk"
+        )
+    );
 
-            querySnapshot.forEach((userDoc) => {
+    users.forEach((user) => {
 
-                users.push({
-                    id: userDoc.id,
-                    ...userDoc.data()
-                });
+        const activeToday =
+            user.available === true &&
+            user.date === today;
 
-            });
+        const div = document.createElement("div");
 
-            users.sort((a, b) =>
-                surname(a.name).localeCompare(
-                    surname(b.name),
-                    "sk"
-                )
-            );
+        div.className =
+            "user " +
+            (activeToday
+                ? "available"
+                : "unavailable");
 
-            users.forEach((user) => {
+        div.textContent =
+            displayName(user.name);
 
-                const activeToday =
-                    user.available === true &&
-                    user.date === today;
+        div.addEventListener("click", () => {
+            toggleUser(user);
+        });
 
-                const div = document.createElement("div");
-
-                div.dataset.name = user.name;
-
-                div.className =
-                    "user " +
-                    (activeToday
-                        ? "available"
-                        : "unavailable");
-
-                div.textContent =
-                    displayName(user.name);
-
-                const uiUser = {
-                    id: user.id,
-                    available: activeToday
-                };
-
-                div.addEventListener("click", () =>
-                    toggleUser(
-                        uiUser,
-                        div
-                    )
-                );
-
-                if (activeToday) {
-                    availableUsers.appendChild(div);
-                } else {
-                    unavailableUsers.appendChild(div);
-                }
-            });
+        if (activeToday) {
+            availableUsers.appendChild(div);
+        } else {
+            unavailableUsers.appendChild(div);
         }
+    });
+}
 
-        loadUsers();
+onSnapshot(
+    collection(db, "users"),
+    (snapshot) => {
+
+        const users = [];
+
+        snapshot.forEach((userDoc) => {
+            users.push({
+                id: userDoc.id,
+                ...userDoc.data()
+            });
+        });
+
+        renderUsers(users);
+    }
+);
 
     </script>
 

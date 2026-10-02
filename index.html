@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Obedová pauza</title>
-
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <style>
         body {
@@ -68,13 +67,12 @@
     <script type="module">
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-
         import {
             getFirestore,
             collection,
+            getDocs,
             doc,
-            updateDoc,
-            onSnapshot
+            updateDoc
         } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -123,25 +121,70 @@
             return `${lastName} ${firstName}`;
         }
 
-        async function toggleUser(user) {
+        function sortContainer(container) {
 
-            const activeToday =
-                user.available === true &&
-                user.date === today;
+            const items = Array.from(container.children);
+
+            items.sort((a, b) =>
+                surname(a.dataset.name).localeCompare(
+                    surname(b.dataset.name),
+                    "sk"
+                )
+            );
+
+            items.forEach(item =>
+                container.appendChild(item)
+            );
+        }
+
+        async function toggleUser(user, element) {
+
+            const newAvailable = !user.available;
 
             await updateDoc(
                 doc(db, "users", user.id),
                 {
-                    available: !activeToday,
+                    available: newAvailable,
                     date: today
                 }
             );
+
+            user.available = newAvailable;
+
+            if (newAvailable) {
+
+                element.classList.remove("unavailable");
+                element.classList.add("available");
+
+                availableUsers.appendChild(element);
+                sortContainer(availableUsers);
+
+            } else {
+
+                element.classList.remove("available");
+                element.classList.add("unavailable");
+
+                unavailableUsers.appendChild(element);
+                sortContainer(unavailableUsers);
+
+            }
         }
 
-        function renderUsers(users) {
+        async function loadUsers() {
 
-            availableUsers.innerHTML = "";
-            unavailableUsers.innerHTML = "";
+            const users = [];
+
+            const querySnapshot =
+                await getDocs(collection(db, "users"));
+
+            querySnapshot.forEach((userDoc) => {
+
+                users.push({
+                    id: userDoc.id,
+                    ...userDoc.data()
+                });
+
+            });
 
             users.sort((a, b) =>
                 surname(a.name).localeCompare(
@@ -158,6 +201,8 @@
 
                 const div = document.createElement("div");
 
+                div.dataset.name = user.name;
+
                 div.className =
                     "user " +
                     (activeToday
@@ -167,4 +212,29 @@
                 div.textContent =
                     displayName(user.name);
 
-                div.addEventListener
+                const uiUser = {
+                    id: user.id,
+                    available: activeToday
+                };
+
+                div.addEventListener("click", () =>
+                    toggleUser(
+                        uiUser,
+                        div
+                    )
+                );
+
+                if (activeToday) {
+                    availableUsers.appendChild(div);
+                } else {
+                    unavailableUsers.appendChild(div);
+                }
+            });
+        }
+
+        loadUsers();
+
+    </script>
+
+</body>
+</html>

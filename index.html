@@ -21,7 +21,7 @@
 
         .date {
             color: #888;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
             font-size: 16px;
         }
 
@@ -85,15 +85,14 @@
         const availableUsers = document.getElementById("availableUsers");
         const unavailableUsers = document.getElementById("unavailableUsers");
 
-        const today = new Date().toISOString().split("T")[0];
+        const today = new Date().toLocaleDateString("sv-SE");
 
-        const now = new Date();
+        const weekday = new Date().toLocaleDateString(
+            "sk-SK",
+            { weekday: "long" }
+        );
 
-        const weekday = now.toLocaleDateString("sk-SK", {
-            weekday: "long"
-        });
-
-        const datePart = now.toLocaleDateString("sk-SK");
+        const datePart = new Date().toLocaleDateString("sk-SK");
 
         document.getElementById("today").textContent =
             `${weekday}, ${datePart}`;
@@ -104,6 +103,7 @@
         }
 
         function displayName(name) {
+
             const parts = name.trim().split(" ");
 
             if (parts.length < 2) {
@@ -116,32 +116,69 @@
             return `${lastName} ${firstName}`;
         }
 
+        function sortContainer(container) {
+
+            const items = Array.from(container.children);
+
+            items.sort((a, b) =>
+                surname(a.dataset.name).localeCompare(
+                    surname(b.dataset.name),
+                    "sk"
+                )
+            );
+
+            items.forEach(item =>
+                container.appendChild(item)
+            );
+        }
+
         async function toggleUser(user, element) {
 
             const newAvailable = !user.available;
 
-            await updateDoc(doc(db, "users", user.id), {
-                available: newAvailable,
-                date: today
-            });
+            await updateDoc(
+                doc(db, "users", user.id),
+                {
+                    available: newAvailable,
+                    date: today
+                }
+            );
 
-            loadUsers();
+            user.available = newAvailable;
+
+            if (newAvailable) {
+
+                element.classList.remove("unavailable");
+                element.classList.add("available");
+
+                availableUsers.appendChild(element);
+                sortContainer(availableUsers);
+
+            } else {
+
+                element.classList.remove("available");
+                element.classList.add("unavailable");
+
+                unavailableUsers.appendChild(element);
+                sortContainer(unavailableUsers);
+
+            }
         }
 
         async function loadUsers() {
 
-            availableUsers.innerHTML = "";
-            unavailableUsers.innerHTML = "";
-
             const users = [];
 
-            const querySnapshot = await getDocs(collection(db, "users"));
+            const querySnapshot =
+                await getDocs(collection(db, "users"));
 
             querySnapshot.forEach((userDoc) => {
+
                 users.push({
                     id: userDoc.id,
                     ...userDoc.data()
                 });
+
             });
 
             users.sort((a, b) =>
@@ -154,26 +191,33 @@
             users.forEach((user) => {
 
                 const activeToday =
-                    user.date === today &&
-                    user.available === true;
+                    user.available === true &&
+                    user.date === today;
 
                 const div = document.createElement("div");
 
+                div.dataset.name = user.name;
+
                 div.className =
                     "user " +
-                    (activeToday ? "available" : "unavailable");
+                    (activeToday
+                        ? "available"
+                        : "unavailable");
 
-                div.textContent = displayName(user.name);
+                div.textContent =
+                    displayName(user.name);
 
-                div.addEventListener("click", () => {
+                const uiUser = {
+                    id: user.id,
+                    available: activeToday
+                };
+
+                div.addEventListener("click", () =>
                     toggleUser(
-                        {
-                            ...user,
-                            available: activeToday
-                        },
+                        uiUser,
                         div
-                    );
-                });
+                    )
+                );
 
                 if (activeToday) {
                     availableUsers.appendChild(div);

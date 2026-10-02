@@ -2,80 +2,138 @@
 <html lang="sk">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Obedová pauza</title>
-</head>
-<body>
-    <h1>🍽️ Obedová pauza</h1>
 
-    <h2>Kto ide na obed</h2>
-    <div id="checkboxes"></div>
-
-    <h2>Dnes idú na obed</h2>
-    <ul id="usersList"></ul>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import {
-            getFirestore,
-            collection,
-            getDocs,
-            doc,
-            updateDoc
-        } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDIgpNqTfom-cIQVmDTU351KxFfK-BiRdM",
-            authDomain: "obedna-pauza.firebaseapp.com",
-            projectId: "obedna-pauza",
-            storageBucket: "obedna-pauza.firebasestorage.app",
-            messagingSenderId: "344992044371",
-            appId: "1:344992044371:web:174bca2238030df816fda6"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const usersList = document.getElementById("usersList");
-        const checkboxes = document.getElementById("checkboxes");
-
-        async function loadUsers() {
-            usersList.innerHTML = "";
-            checkboxes.innerHTML = "";
-
-            const querySnapshot = await getDocs(collection(db, "users"));
-
-            querySnapshot.forEach((userDoc) => {
-                const data = userDoc.data();
-
-                const label = document.createElement("label");
-
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.checked = data.available;
-
-                checkbox.addEventListener("change", async () => {
-                    await updateDoc(doc(db, "users", userDoc.id), {
-                        available: checkbox.checked
-                    });
-
-                    loadUsers();
-                });
-
-                label.appendChild(checkbox);
-                label.append(" " + data.name);
-
-                checkboxes.appendChild(label);
-                checkboxes.appendChild(document.createElement("br"));
-
-                if (data.available) {
-                    const li = document.createElement("li");
-                    li.textContent = data.name;
-                    usersList.appendChild(li);
-                }
-            });
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
         }
 
-        loadUsers();
-    </script>
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .user {
+            font-size: 24px;
+            padding: 12px 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .available {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .unavailable {
+            color: #999;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🍽️ Obedová pauza</h1>
+
+<div id="availableUsers"></div>
+
+<hr>
+
+<div id="unavailableUsers"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    doc,
+    updateDoc
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDIgpNqTfom-cIQVmDTU351KxFfK-BiRdM",
+    authDomain: "obedna-pauza.firebaseapp.com",
+    projectId: "obedna-pauza",
+    storageBucket: "obedna-pauza.firebasestorage.app",
+    messagingSenderId: "344992044371",
+    appId: "1:344992044371:web:174bca2238030df816fda6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const availableUsers = document.getElementById("availableUsers");
+const unavailableUsers = document.getElementById("unavailableUsers");
+
+function surname(name) {
+    const parts = name.trim().split(" ");
+    return parts[parts.length - 1].toLowerCase();
+}
+
+async function loadUsers() {
+
+    availableUsers.innerHTML = "";
+    unavailableUsers.innerHTML = "";
+
+    const users = [];
+
+    const querySnapshot = await getDocs(collection(db, "users"));
+
+    querySnapshot.forEach((userDoc) => {
+        users.push({
+            id: userDoc.id,
+            ...userDoc.data()
+        });
+    });
+
+    users.sort((a, b) =>
+        surname(a.name).localeCompare(surname(b.name), "sk")
+    );
+
+    users.forEach((user) => {
+
+        const div = document.createElement("div");
+        div.classList.add("user");
+
+        if (user.available) {
+            div.classList.add("available");
+        } else {
+            div.classList.add("unavailable");
+        }
+
+        div.textContent = user.name;
+
+        div.addEventListener("click", async () => {
+
+            await updateDoc(doc(db, "users", user.id), {
+                available: !user.available
+            });
+
+            loadUsers();
+        });
+
+        if (user.available) {
+            availableUsers.appendChild(div);
+        } else {
+            unavailableUsers.appendChild(div);
+        }
+    });
+}
+
+loadUsers();
+
+</script>
+
 </body>
 </html>

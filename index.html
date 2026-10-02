@@ -223,7 +223,14 @@ function renderUsers(users) {
 loadUsers();
 
 
-
+document.addEventListener(
+    "visibilitychange",
+    () => {
+        if (!document.hidden) {
+            loadUsers();
+        }
+    }
+);
     </script>
 
 </body>

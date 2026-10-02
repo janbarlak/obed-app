@@ -20,6 +20,7 @@
         .date {
             color: #666;
             margin-bottom: 25px;
+            font-size: 16px;
         }
 
         .user {
@@ -48,150 +49,170 @@
 </head>
 <body>
 
-<h1>🍽️ ☕ 🚶 Obedová pauza</h1>
+    <h1>🍽️ ☕ 🚶 Obedová pauza</h1>
 
-<div id="today" class="date"></div>
+    <div id="today" class="date"></div>
 
-<div id="availableUsers"></div>
+    <div id="availableUsers"></div>
 
-<hr>
+    <hr>
 
-<div id="unavailableUsers"></div>
+    <div id="unavailableUsers"></div>
 
-<script type="module">
+    <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import {
-    getFirestore,
-    collection,
-    getDocs,
-    doc,
-    updateDoc
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            getDocs,
+            doc,
+            updateDoc
+        } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDIgpNqTfom-cIQVmDTU351KxFfK-BiRdM",
-    authDomain: "obedna-pauza.firebaseapp.com",
-    projectId: "obedna-pauza",
-    storageBucket: "obedna-pauza.firebasestorage.app",
-    messagingSenderId: "344992044371",
-    appId: "1:344992044371:web:174bca2238030df816fda6"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIgpNqTfom-cIQVmDTU351KxFfK-BiRdM",
+            authDomain: "obedna-pauza.firebaseapp.com",
+            projectId: "obedna-pauza",
+            storageBucket: "obedna-pauza.firebasestorage.app",
+            messagingSenderId: "344992044371",
+            appId: "1:344992044371:web:174bca2238030df816fda6"
+        };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-const availableUsers = document.getElementById("availableUsers");
-const unavailableUsers = document.getElementById("unavailableUsers");
+        const availableUsers = document.getElementById("availableUsers");
+        const unavailableUsers = document.getElementById("unavailableUsers");
 
-const today = new Date().toISOString().split("T")[0];
+        const today = new Date().toISOString().split("T")[0];
 
-document.getElementById("today").textContent =
-    new Date().toLocaleDateString("sk-SK");
+        document.getElementById("today").textContent =
+            new Date().toLocaleDateString("sk-SK", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            });
 
-function surname(name) {
-    const parts = name.trim().split(" ");
-    return parts[parts.length - 1].toLowerCase();
-}
-
-function sortContainer(container) {
-    const items = Array.from(container.children);
-
-    items.sort((a, b) =>
-        surname(a.textContent).localeCompare(
-            surname(b.textContent),
-            "sk"
-        )
-    );
-
-    items.forEach(item => container.appendChild(item));
-}
-
-async function toggleUser(user, element) {
-
-    const newAvailable = !user.available;
-
-    await updateDoc(doc(db, "users", user.id), {
-        available: newAvailable,
-        date: today
-    });
-
-    user.available = newAvailable;
-    user.date = today;
-
-    if (newAvailable) {
-        element.classList.remove("unavailable");
-        element.classList.add("available");
-
-        availableUsers.appendChild(element);
-        sortContainer(availableUsers);
-
-    } else {
-        element.classList.remove("available");
-        element.classList.add("unavailable");
-
-        unavailableUsers.appendChild(element);
-        sortContainer(unavailableUsers);
-    }
-}
-
-async function loadUsers() {
-
-    availableUsers.innerHTML = "";
-    unavailableUsers.innerHTML = "";
-
-    const users = [];
-
-    const querySnapshot = await getDocs(collection(db, "users"));
-
-    querySnapshot.forEach((userDoc) => {
-        users.push({
-            id: userDoc.id,
-            ...userDoc.data()
-        });
-    });
-
-    users.sort((a, b) =>
-        surname(a.name).localeCompare(
-            surname(b.name),
-            "sk"
-        )
-    );
-
-    users.forEach((user) => {
-
-        const activeToday =
-            user.date === today &&
-            user.available === true;
-
-        const div = document.createElement("div");
-
-        div.textContent = user.name;
-        div.className =
-            "user " +
-            (activeToday ? "available" : "unavailable");
-
-        div.addEventListener("click", () => {
-            toggleUser(
-                {
-                    ...user,
-                    available: activeToday
-                },
-                div
-            );
-        });
-
-        if (activeToday) {
-            availableUsers.appendChild(div);
-        } else {
-            unavailableUsers.appendChild(div);
+        function surname(name) {
+            const parts = name.trim().split(" ");
+            return parts[parts.length - 1].toLowerCase();
         }
-    });
-}
 
-loadUsers();
+        function displayName(name) {
+            const parts = name.trim().split(" ");
 
-</script>
+            if (parts.length < 2) {
+                return name;
+            }
+
+            const firstName = parts[0];
+            const lastName = parts.slice(1).join(" ");
+
+            return `${lastName} ${firstName}`;
+        }
+
+        function sortContainer(container) {
+            const items = Array.from(container.children);
+
+            items.sort((a, b) =>
+                surname(a.dataset.name).localeCompare(
+                    surname(b.dataset.name),
+                    "sk"
+                )
+            );
+
+            items.forEach(item => container.appendChild(item));
+        }
+
+        async function toggleUser(user, element) {
+
+            const newAvailable = !user.available;
+
+            await updateDoc(doc(db, "users", user.id), {
+                available: newAvailable,
+                date: today
+            });
+
+            user.available = newAvailable;
+
+            if (newAvailable) {
+                element.classList.remove("unavailable");
+                element.classList.add("available");
+
+                availableUsers.appendChild(element);
+                sortContainer(availableUsers);
+
+            } else {
+                element.classList.remove("available");
+                element.classList.add("unavailable");
+
+                unavailableUsers.appendChild(element);
+                sortContainer(unavailableUsers);
+            }
+        }
+
+        async function loadUsers() {
+
+            availableUsers.innerHTML = "";
+            unavailableUsers.innerHTML = "";
+
+            const users = [];
+
+            const querySnapshot = await getDocs(collection(db, "users"));
+
+            querySnapshot.forEach((userDoc) => {
+                users.push({
+                    id: userDoc.id,
+                    ...userDoc.data()
+                });
+            });
+
+            users.sort((a, b) =>
+                surname(a.name).localeCompare(
+                    surname(b.name),
+                    "sk"
+                )
+            );
+
+            users.forEach((user) => {
+
+                const activeToday =
+                    user.date === today &&
+                    user.available === true;
+
+                const div = document.createElement("div");
+
+                div.dataset.name = user.name;
+
+                div.className =
+                    "user " +
+                    (activeToday ? "available" : "unavailable");
+
+                div.textContent = displayName(user.name);
+
+                div.addEventListener("click", () => {
+                    toggleUser(
+                        {
+                            ...user,
+                            available: activeToday
+                        },
+                        div
+                    );
+                });
+
+                if (activeToday) {
+                    availableUsers.appendChild(div);
+                } else {
+                    unavailableUsers.appendChild(div);
+                }
+            });
+        }
+
+        loadUsers();
+
+    </script>
 
 </body>
 </html>

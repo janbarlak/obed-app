@@ -143,14 +143,21 @@ async function toggleUser(user) {
         user.available === true &&
         user.date === today;
 
-    await updateDoc(
-        doc(db, "users", user.id),
-        {
-            available: !activeToday,
-            date: today
-        }
-    );
-await loadUsers();
+    try {
+
+        await updateDoc(
+            doc(db, "users", user.id),
+            {
+                available: !activeToday,
+                date: today
+            }
+        );
+
+    } catch (error) {
+        console.error(error);
+    }
+
+    await loadUsers();
 }
 
 async function loadUsers() {
@@ -215,7 +222,7 @@ function renderUsers(users) {
 
 loadUsers();
 
-setInterval(loadUsers, 10000);
+
 
     </script>
 

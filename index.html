@@ -89,14 +89,14 @@
 
     <script type="module">
 
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-       import {
-            getFirestore,
-            collection,
-            getDocs,
-            doc,
-            updateDoc
-        } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    doc,
+    updateDoc,
+    setDoc
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDIgpNqTfom-cIQVmDTU351KxFfK-BiRdM",
@@ -171,6 +171,19 @@
             return `${lastName} ${firstName}`;
         }
 
+function createUserId(fullName) {
+
+    const parts = fullName.trim().split(" ");
+
+    const surname = parts[parts.length - 1];
+
+    return surname
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
+        
         function sortContainer(container) {
 
             const items = Array.from(container.children);
